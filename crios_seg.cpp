@@ -71,13 +71,13 @@ Mat filter_red(Mat image_in){
   return mask_1|mask_2;
 }
 
-unsigned char* getRawImageSDRAM(){
-  int fd;
+unsigned char* getRawImageSDRAM(int fd){
+  // int fd;
   void *sdram_value;
-  if( ( fd = open( "/dev/mem", ( O_RDWR | O_SYNC ) ) ) == -1 ) {
-    printf( "ERROR: could not open \"/dev/mem\"...\n" );
-    return( (unsigned char*)1 );
-  }
+  // if( ( fd = open( "/dev/mem", ( O_RDWR | O_SYNC ) ) ) == -1 ) {
+  //   printf( "ERROR: could not open \"/dev/mem\"...\n" );
+  //   return( (unsigned char*)1 );
+  // }
   sdram_value = mmap( NULL, SDRAM_SEGMENTED_SPAN, ( PROT_READ | PROT_WRITE ), MAP_SHARED, fd, SDRAM_SEGMENTED_BASE );
   // HexDump((unsigned char*)sdram_value, SDRAM_TESTE_SPAN);
   return (unsigned char*)sdram_value;
@@ -110,27 +110,41 @@ int main(int argc, char** argv) {
   lw_hps2fpga = virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_OUTPUT_2_FPGA_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
   lw_fpga2hps = virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_INPUT_2_HPS_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
 
+  Mat src, erosion_dst, dilation_dst;
+
   while (true){
-      EN_REQ_WRITE;
-      while(WAIT_DONE_WRITE);
-      DIS_REQ_WRITE;
-      imgSDRAM = getRawImageSDRAM();
-      Mat img(480, 640, CV_8UC1, imgSDRAM);
-      #ifdef SDRAM_SEG
-        findContours( img, contours, hierarchy,CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
-        for( unsigned int i = 0; i < contours.size(); i++ ) {
-          // double a = contourArea(contours[i],false);
-          bounding_rect = boundingRect(contours[i]);
-          rectangle(img, bounding_rect, Scalar(0,255,0),2, 8,0);
-          // cout << "\nCountour draw with area = " << a;
-        }
-      #endif
-      namedWindow(WINDOW_NAME, CV_WINDOW_AUTOSIZE);
-      imshow(WINDOW_NAME,img);
-      if (waitKey(1) == 27) {
-        cout << "ESC key is pressed by user" << endl;
-        break;
-      }
+    // printf("\nPedindo requisicao input_2_hps...");
+    // EN_REQ_WRITE;
+    // while(1) {
+    //   printf("\nAguardando write done [%x]...",INPUT_FPGA_BIT0);
+    //   if (INPUT_FPGA_BIT0 == 1)
+    //     break;
+    //   sleep(1);
+    // }
+    // printf("OK..pedindo outra imagem");
+    // sleep(1);
+
+    //printf("\nRequisitando imagem...");
+    EN_REQ_WRITE;
+    while(WAIT_DONE_WRITE);
+    DIS_REQ_WRITE;
+    imgSDRAM = getRawImageSDRAM(fd);
+    Mat img(480, 640, CV_8UC1, imgSDRAM);
+    #ifdef SDRAM_SEG
+      findContours( img, contours, hierarchy,CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
+      // for( unsigned int i = 0; i < contours.size(); i++ ) {
+      //   // double a = contourArea(contours[i],false);
+      //   bounding_rect = boundingRect(contours[i]);
+      //   rectangle(img, bounding_rect, Scalar(0,255,0),2, 8,0);
+      //   // cout << "\nCountour draw with area = " << a;
+      // }
+    #endif
+    namedWindow(WINDOW_NAME, CV_WINDOW_AUTOSIZE);
+    imshow(WINDOW_NAME,img);
+    if (waitKey(1) == 27) {
+      cout << "ESC key is pressed by user" << endl;
+      break;
+    }
   }
 #else
   #if INPUT_SOURCE == IMG_INPUT

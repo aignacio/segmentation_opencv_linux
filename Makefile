@@ -1,4 +1,4 @@
-TARGET = seg
+TARGET = crios_seg
 
 ARCH= arm
 HWLIBS_ROOT = /usr/local/include/hwlib/include
