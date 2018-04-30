@@ -34,7 +34,7 @@
 #define WEBCAM       2
 #define IMG_INPUT    3
 
-#define INPUT_SOURCE SDRAM
+#define INPUT_SOURCE WEBCAM
 
 #ifndef INPUT_SOURCE
   #error "Define a input source MACRO in the crios_seg.h"
