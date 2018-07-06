@@ -106,9 +106,9 @@ int main(int argc, char** argv) {
 
  while (true){
   // Requisition of image from FPGA
-  EN_REQ_WRITE;
+  UP_IMAGE_FPGA;
   while(WAIT_DONE_WRITE);
-  DIS_REQ_WRITE;
+  DOWN_IMAGE_FPGA;
   imgSDRAM = getRawImageSDRAM(fd);
   Mat img_from_fpga(INPUT_IMAGE_HEIGHT, INPUT_IMAGE_WIDTH, CV_8UC1, imgSDRAM);
   Mat img_blured_3c;

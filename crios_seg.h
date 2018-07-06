@@ -48,9 +48,14 @@
 #endif
 
 #define ENABLE_SEGMENTATION
-#define EN_REQ_WRITE    alt_write_word(lw_hps2fpga, 0x01)
-#define DIS_REQ_WRITE   alt_write_word(lw_hps2fpga, 0x00)
+// #define EN_REQ_WRITE    alt_write_word(lw_hps2fpga, 0x01)
+// #define DIS_REQ_WRITE   alt_write_word(lw_hps2fpga, 0x00)
+// #define INPUT_FPGA_BIT0 (alt_read_word(lw_fpga2hps)&0x1)
+// #define WAIT_DONE_WRITE (INPUT_FPGA_BIT0 == 0x0)
+
 #define INPUT_FPGA_BIT0 (alt_read_word(lw_fpga2hps)&0x1)
+#define UP_IMAGE_FPGA alt_write_word(lw_hps2fpga, (0x00000001 << 31) | (0x00000001))
 #define WAIT_DONE_WRITE (INPUT_FPGA_BIT0 == 0x0)
+#define DOWN_IMAGE_FPGA alt_write_word(lw_hps2fpga, (0x00000001 << 31) | (0x00000000))
 
 #endif
