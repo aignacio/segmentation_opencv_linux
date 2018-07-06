@@ -28,6 +28,7 @@
 #define HW_REGS_SPAN 0x04000000
 #define HW_REGS_MASK ( HW_REGS_SPAN - 1 )
 
+#define MIN_AREA_DETECT 800
 #define WINDOW_NAME "CRIOS Test"
 
 #define SDRAM        1
@@ -44,7 +45,7 @@
   #warning "IMAGE - In this case you can use a colored image because the program will filter the RED color to you!"
 #endif
 
-//#define SDRAM_SEG
+#define ENABLE_SEGMENTATION
 #define EN_REQ_WRITE    alt_write_word(lw_hps2fpga, 0x01)
 #define DIS_REQ_WRITE   alt_write_word(lw_hps2fpga, 0x00)
 #define INPUT_FPGA_BIT0 (alt_read_word(lw_fpga2hps)&0x1)

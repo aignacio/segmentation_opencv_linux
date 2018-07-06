@@ -6,23 +6,23 @@
 	888        8888888P     888  888     888      Y88b.
 	888    888 888 T88b     888  888     888        888
 	Y88b  d88P 888  T88b    888  Y88b. .d88P Y88b  d88P
-          Y8888P   888   T88b 8888888  Y88888P     Y8888P
+   Y8888P   888   T88b 8888888  Y88888P     Y8888P
  ============================================================================
-	 Name        : crios_seg.cpp
-	 Author      : Anderson Ignacio da Silva
-	 Version     : 1.0
-   Date        : 20/03/2018
-	 Copyright   : GPLv3
-   libs        : OpenCV 3.1 - Cross compiled for ARM Cortex A9 - Arch ARMv7
+  Name        : crios_seg.cpp
+  Author      : Anderson Ignacio da Silva
+  Version     : 1.0
+  Date        : 20/03/2018
+  Copyright   : GPLv3
+  Libs        : OpenCV 3.1 - Cross compiled for ARM Cortex A9 - Arch ARMv7
 	 Description : Image processing program in C++ to segment a grayscale pre-
-                 processed image by FPGA. The idea is to read the image that
-                 is in the SDRAM wrote by the FPGA and then find the contour
-                 of the objects inside. An input image is composed by graysc
-                 ale pixels from 0x00 to 0xff and this image must be highlig
-                 ht just the ROI color pixels, such as yellow, green, red, b
-                 lue that compose the most traffic signs. As the output the
-                 program write the regions (countours) in a specific locatio
-                 n of the SDRAM.
+                processed image by FPGA. The idea is to read the image that
+                is in the SDRAM wrote by the FPGA and then find the contour
+                of the objects inside. An input image is composed by graysc
+                ale pixels from 0x00 to 0xff and this image must be highlig
+                ht just the ROI color pixels, such as yellow, green, red, b
+                lue that compose the most traffic signs. As the output the
+                program write the regions (countours) in a specific locatio
+                n of the SDRAM.
 
  ============================================================================
 */
@@ -63,89 +63,79 @@ vector<vector<Point>> contours;
 vector<Vec4i> hierarchy;
 
 Mat filter_red(Mat image_in){
-  Mat mask_1, mask_2, imageHSV;
-  int th_red = 10;
-  cvtColor(image_in, imageHSV, CV_BGR2HSV);
-  inRange(imageHSV, Scalar(0, 60, 80), Scalar(th_red, 255, 255), mask_1);
-  inRange(imageHSV, Scalar(180-th_red, 150, 150), Scalar(180, 255, 255), mask_2);
-  return mask_1|mask_2;
+ Mat mask_1, mask_2, imageHSV;
+ int th_red = 10;
+ cvtColor(image_in, imageHSV, CV_BGR2HSV);
+ inRange(imageHSV, Scalar(0, 60, 80), Scalar(th_red, 255, 255), mask_1);
+ inRange(imageHSV, Scalar(180-th_red, 150, 150), Scalar(180, 255, 255), mask_2);
+ return mask_1|mask_2;
 }
 
 unsigned char* getRawImageSDRAM(int fd){
-  // int fd;
-  void *sdram_value;
-  // if( ( fd = open( "/dev/mem", ( O_RDWR | O_SYNC ) ) ) == -1 ) {
-  //   printf( "ERROR: could not open \"/dev/mem\"...\n" );
-  //   return( (unsigned char*)1 );
-  // }
-  sdram_value = mmap( NULL, SDRAM_SEGMENTED_SPAN, ( PROT_READ | PROT_WRITE ), MAP_SHARED, fd, SDRAM_SEGMENTED_BASE );
-  // HexDump((unsigned char*)sdram_value, SDRAM_TESTE_SPAN);
-  return (unsigned char*)sdram_value;
+ void *sdram_value;
+ sdram_value = mmap( NULL, SDRAM_SEGMENTED_SPAN, ( PROT_READ | PROT_WRITE ), MAP_SHARED, fd, SDRAM_SEGMENTED_BASE );
+ return (unsigned char*)sdram_value;
 }
 
 int main(int argc, char** argv) {
 #if INPUT_SOURCE == SDRAM
-  unsigned char *imgSDRAM;
-  int fd;
-  Rect bounding_rect;
-  void *virtual_base,
-       *lw_hps2fpga,
-       *lw_fpga2hps;
+ unsigned char *imgSDRAM;
+ int fd;
+ Rect bounding_rect;
+ void *virtual_base,
+      *lw_hps2fpga,
+      *lw_fpga2hps;
 
-  if( ( fd = open( "/dev/mem", ( O_RDWR | O_SYNC ) ) ) == -1 ) {
-    cout << "ERROR: could not open \"/dev/mem\"... to map virtual address!\n" << endl;
-    return ( 1 );
-  }
+ if( ( fd = open( "/dev/mem", ( O_RDWR | O_SYNC ) ) ) == -1 ) {
+  cout << "ERROR: could not open \"/dev/mem\"... to map virtual address!\n" << endl;
+  return ( 1 );
+ }
 
-  virtual_base = mmap( NULL, HW_REGS_SPAN, ( PROT_READ | PROT_WRITE ), MAP_SHARED, fd, (off_t)HW_REGS_BASE );
+ virtual_base = mmap( NULL, HW_REGS_SPAN, ( PROT_READ | PROT_WRITE ), MAP_SHARED, fd, (off_t)HW_REGS_BASE );
 
-  if ( virtual_base == MAP_FAILED ){
-    cout << "Error: mmap() failed of virtual address...\n" << endl;
-    close(fd);
-    return ( 1 );
-  }
+ if ( virtual_base == MAP_FAILED ){
+  cout << "Error: mmap() failed of virtual address...\n" << endl;
+  close(fd);
+  return ( 1 );
+ }
 
-  cout << "Press ESC to exit()..." << endl;
+ cout << "Press ESC to exit()..." << endl;
 
-  lw_hps2fpga = virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_OUTPUT_2_FPGA_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
-  lw_fpga2hps = virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_INPUT_2_HPS_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
+ lw_hps2fpga = virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_OUTPUT_2_FPGA_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
+ lw_fpga2hps = virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_INPUT_2_HPS_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
 
-  Mat src, erosion_dst, dilation_dst;
+ while (true){
+  // Requisition of image from FPGA
+  EN_REQ_WRITE;
+  while(WAIT_DONE_WRITE);
+  DIS_REQ_WRITE;
+  imgSDRAM = getRawImageSDRAM(fd);
+  Mat img_from_fpga(INPUT_IMAGE_HEIGHT, INPUT_IMAGE_WIDTH, CV_8UC1, imgSDRAM);
+  Mat img_blured_3c;
 
-  while (true){
-    // printf("\nPedindo requisicao input_2_hps...");
-    // EN_REQ_WRITE;
-    // while(1) {
-    //   printf("\nAguardando write done [%x]...",INPUT_FPGA_BIT0);
-    //   if (INPUT_FPGA_BIT0 == 1)
-    //     break;
-    //   sleep(1);
-    // }
-    // printf("OK..pedindo outra imagem");
-    // sleep(1);
+  // Apply blur filtering
+  medianBlur(img_from_fpga, img_from_fpga, 5);
+  // Convert it to 3 channels RGB
+  cvtColor(img_from_fpga,img_blured_3c,CV_GRAY2RGB);
 
-    //printf("\nRequisitando imagem...");
-    EN_REQ_WRITE;
-    while(WAIT_DONE_WRITE);
-    DIS_REQ_WRITE;
-    imgSDRAM = getRawImageSDRAM(fd);
-    Mat img(480, 640, CV_8UC1, imgSDRAM);
-    #ifdef SDRAM_SEG
-      findContours( img, contours, hierarchy,CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
-      // for( unsigned int i = 0; i < contours.size(); i++ ) {
-      //   // double a = contourArea(contours[i],false);
-      //   bounding_rect = boundingRect(contours[i]);
-      //   rectangle(img, bounding_rect, Scalar(0,255,0),2, 8,0);
-      //   // cout << "\nCountour draw with area = " << a;
-      // }
-    #endif
-    namedWindow(WINDOW_NAME, CV_WINDOW_AUTOSIZE);
-    imshow(WINDOW_NAME,img);
-    if (waitKey(1) == 27) {
-      cout << "ESC key is pressed by user" << endl;
-      break;
+  #ifdef ENABLE_SEGMENTATION
+   findContours(img_from_fpga, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
+   for( unsigned int i = 0; i < contours.size(); i++ ) {
+    double area = contourArea(contours[i],false);
+    if (area > MIN_AREA_DETECT) {
+     bounding_rect = boundingRect(contours[i]);
+     rectangle(img_blured_3c, bounding_rect, Scalar(0,255,0),2, 8,0);
     }
+   }
+  #endif
+
+  namedWindow(WINDOW_NAME, CV_WINDOW_AUTOSIZE);
+  imshow(WINDOW_NAME, img_blured_3c);
+  if (waitKey(1) == 27) {
+   cout << "ESC key is pressed by user" << endl;
+   break;
   }
+ }
 #else
   #if INPUT_SOURCE == IMG_INPUT
     char *file_input = argv[1];
