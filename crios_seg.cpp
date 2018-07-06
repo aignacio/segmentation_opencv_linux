@@ -106,9 +106,12 @@ int main(int argc, char** argv) {
 
  while (true){
   // Requisition of image from FPGA
+  cout << "\nReq. image from FPGA....";
   UP_IMAGE_FPGA;
   while(WAIT_DONE_WRITE);
   DOWN_IMAGE_FPGA;
+  cout << "image received!";
+
   imgSDRAM = getRawImageSDRAM(fd);
   Mat img_from_fpga(INPUT_IMAGE_HEIGHT, INPUT_IMAGE_WIDTH, CV_8UC1, imgSDRAM);
   Mat img_blured_3c;
@@ -125,6 +128,7 @@ int main(int argc, char** argv) {
     if (area > MIN_AREA_DETECT) {
      bounding_rect = boundingRect(contours[i]);
      rectangle(img_blured_3c, bounding_rect, Scalar(0,255,0),2, 8,0);
+     cout << "\nObject at X1=%d" << bounding_rect.x << " Y1=%d" << bounding_rect.y;
     }
    }
   #endif
