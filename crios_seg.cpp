@@ -104,13 +104,32 @@ int main(int argc, char** argv) {
  lw_hps2fpga = virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_OUTPUT_2_FPGA_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
  lw_fpga2hps = virtual_base + ( ( unsigned long  )( ALT_LWFPGASLVS_OFST + PIO_INPUT_2_HPS_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
 
+ int input_hps = 0x00;
+
  while (true){
   // Requisition of image from FPGA
-  cout << "\nReq. image from FPGA....";
-  UP_IMAGE_FPGA;
+  cout << "\nReq. image from FPGA";
+  EN_REQ_WRITE;
   while(WAIT_DONE_WRITE);
-  DOWN_IMAGE_FPGA;
-  cout << "image received!";
+  DIS_REQ_WRITE;
+  cout << " image received!";
+  // alt_write_word(lw_hps2fpga, 0x80000001);
+  // input_hps = alt_read_word(lw_fpga2hps);
+  // while(input_hps != 0x00000001){
+  //  sleep(0.5);
+  //  cout << ".";
+  //  input_hps = alt_read_word(lw_fpga2hps);
+  // }
+  // cout << " image received!";
+  // alt_write_word(lw_hps2fpga, 0x80000000);
+
+  // ZERO_FPGA;
+  // UP_IMAGE_FPGA;
+  // while(WAIT_FPGA_IDDLE);
+  // UP_IMAGE_FPGA_2;
+  // while(!WAIT_FPGA_IDDLE);
+  // UP_IMAGE_FPGA;
+  // ZERO_FPGA;
 
   imgSDRAM = getRawImageSDRAM(fd);
   Mat img_from_fpga(INPUT_IMAGE_HEIGHT, INPUT_IMAGE_WIDTH, CV_8UC1, imgSDRAM);
@@ -118,8 +137,8 @@ int main(int argc, char** argv) {
 
   // Apply blur filtering
   medianBlur(img_from_fpga, img_from_fpga, 5);
-  // Convert it to 3 channels RGB
   cvtColor(img_from_fpga,img_blured_3c,CV_GRAY2RGB);
+  // Convert it to 3 channels RGB
 
   #ifdef ENABLE_SEGMENTATION
    findContours(img_from_fpga, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
@@ -128,7 +147,8 @@ int main(int argc, char** argv) {
     if (area > MIN_AREA_DETECT) {
      bounding_rect = boundingRect(contours[i]);
      rectangle(img_blured_3c, bounding_rect, Scalar(0,255,0),2, 8,0);
-     cout << "\nObject at X1=%d" << bounding_rect.x << " Y1=%d" << bounding_rect.y;
+     cout << "\nObject: X1=" << bounding_rect.x << " Y1=" << bounding_rect.y <<\
+             " X2=" << bounding_rect.x+bounding_rect.width << " Y2=" << bounding_rect.y+bounding_rect.height;
     }
    }
   #endif
